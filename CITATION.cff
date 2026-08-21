@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+title: Line-Buffer Layer Fusion for FPGA CNN Acceleration
+message: If you use this software, please cite both the software and the paper.
+type: software
+authors:
+  - given-names: Jeonghun
+    family-names: Im
+    affiliation: Santa Clara University
+  - given-names: Radhika S.
+    family-names: Grover
+    affiliation: Santa Clara University
+repository-code: https://github.com/ImJ9y/REPLACE-WITH-REPO-NAME
+license: MIT
+keywords:
+  - FPGA
+  - convolutional neural network
+  - high-level synthesis
+  - layer fusion
+  - line buffer
+  - ADAS
+preferred-citation:
+  type: conference-paper
+  title: >-
+    An FPGA-Based CNN Accelerator Architecture Using Line-Buffer Layer Fusion
+    for ADAS Applications
+  authors:
+    - given-names: Jeonghun
+      family-names: Im
+    - given-names: Radhika S.
+      family-names: Grover
+  collection-title: >-
+    IEEE International Symposium on Embedded Multicore/Many-core
+    Systems-on-Chip (MCSoC)
+  year: 2026

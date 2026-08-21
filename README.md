@@ -96,9 +96,9 @@ src/
   lenet.h                     network dimensions and data types
   parameters.h                trained weights, 32-bit float
   parameters_fixed.h          trained weights, ap_fixed<16,8>
+  image_data.h                one 32x32 test image
 testbench/
   tb_lenet.cpp                C simulation testbench
-  image_data.h                one 32x32 test image
 ```
 
 Each `.cpp` is a complete, self-contained top level. Only one is added to a

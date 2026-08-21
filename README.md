@@ -99,6 +99,8 @@ src/
   image_data.h                one 32x32 test image
 testbench/
   tb_lenet.cpp                C simulation testbench
+scripts/
+  lenet_board_test_final.py   board verification and timing measurement
 ```
 
 Each `.cpp` is a complete, self-contained top level. Only one is added to a
@@ -138,16 +140,57 @@ Clock constraint 10 ns with 7.3 ns uncertainty.
 
 ### Vivado block design
 
-Add the exported IP, then instantiate:
+The accelerator exposes two AXI-Stream ports of **different widths**, set by the
+types in `lenet.h`:
 
-- Zynq processing system, `FCLK_CLK0` at 50 MHz
-- AXI DMA with both MM2S and S2MM channels, 16-bit stream width
-- AXI SmartConnect and memory interconnect
+| Port | Type | Width | DMA channel |
+|---|---|---|---|
+| `input_r` | `ap_fixed<16,8>` | **16 bit** | `M_AXIS_MM2S` |
+| `output_r` | `ap_axis<32,0,0,0>` | **32 bit** | `S_AXIS_S2MM` |
 
-Connect `axi_dma_0/M_AXIS_MM2S` → `lenet_predict_0/input_r` and
-`lenet_predict_0/output_r` → `axi_dma_0/S_AXIS_S2MM`. Both are required; leaving
-either unconnected ties `TVALID` low and the accelerator blocks on its first
-read.
+Getting these wrong is the most common integration mistake: the DMA defaults to
+32 bits on both channels, and leaving MM2S at 32 silently feeds two pixels per
+beat.
+
+**Zynq7 Processing System**
+
+- `PS-PL Configuration` → `M AXI GP0` enabled (AXI-Lite control)
+- `PS-PL Configuration` → `S AXI HP0` enabled (DMA access to DDR)
+- `Clock Configuration` → `FCLK_CLK0` = **50 MHz**
+
+**AXI Direct Memory Access**
+
+- Enable Scatter Gather Engine: **unchecked** (simple mode)
+- Width of Buffer Length Register: **14** — this is what caps a single
+  transfer at 2^14 − 1 = 16,383 bytes, or seven images at 2,048 bytes each.
+  Raise it to 26 if you want larger transactions.
+- Address Width: 32
+- **Read Channel (MM2S)**: enabled, Memory Map Data Width 64,
+  **Stream Data Width 16**, Max Burst Size 16
+- **Write Channel (S2MM)**: enabled, Memory Map Data Width 64,
+  **Stream Data Width 32**, Max Burst Size 16
+
+**Connections**
+
+| From | To | Via |
+|---|---|---|
+| `processing_system7_0/M_AXI_GP0` | `axi_dma_0/S_AXI_LITE`, `lenet_predict_0/s_axi_control` | AXI SmartConnect |
+| `axi_dma_0/M_AXI_MM2S`, `M_AXI_S2MM` | `processing_system7_0/S_AXI_HP0` | AXI Interconnect |
+| `axi_dma_0/M_AXIS_MM2S` | `lenet_predict_0/input_r` | direct |
+| `lenet_predict_0/output_r` | `axi_dma_0/S_AXIS_S2MM` | direct |
+
+Both stream connections are required. Leaving either unconnected ties
+`input_r_TVALID` low, and the accelerator blocks forever on its first read while
+Vivado reports only a warning:
+
+```
+[BD 41-759] ... /lenet_predict_0/input_r_TVALID ... tied-off to all 0's
+[xilinx.com:ip:axi_dma:7.1-11] S_AXIS_S2MM interface is unconnected
+```
+
+Drive every `aclk` from `FCLK_CLK0` and every `aresetn` from the Processor
+System Reset block, then run `Validate Design` (F6) and
+`Address Editor` → `Assign All`.
 
 ### Running on the board
 
@@ -172,8 +215,40 @@ dma.sendchannel.wait(); dma.recvchannel.wait()
 print(int(rx[0]))
 ```
 
-At most **seven images** fit in one DMA transaction. Split larger batches across
-invocations.
+At most **seven images** fit in one DMA transaction, from the 16,383-byte
+buffer-length limit above. Split larger batches across invocations.
+
+This snippet runs a single inference as a sanity check. It does not reproduce
+the measurements in the paper — those come from a batch sweep and a linear
+fit:
+
+```python
+import numpy as np, time
+
+def run(img_q, n):                      # n <= 7
+    tx = allocate(shape=(n * 1024,), dtype=np.int16)
+    rx = allocate(shape=(n,),        dtype=np.int32)
+    try:
+        tx[:] = np.tile(img_q, n)
+        ip.register_map.batches = n
+        ip.register_map.CTRL.AP_START = 1
+        t0 = time.perf_counter()
+        dma.recvchannel.transfer(rx); dma.sendchannel.transfer(tx)
+        dma.sendchannel.wait();       dma.recvchannel.wait()
+        return [int(v) for v in rx], time.perf_counter() - t0
+    finally:
+        tx.freebuffer(); rx.freebuffer()
+
+b = np.array([1, 2, 4, 7], float)
+t = np.array([run(img_q, int(n))[1] for n in b])
+marginal, fixed = np.polyfit(b, t, 1)
+print("fixed %.0f us | marginal %.1f us" % (fixed*1e6, marginal*1e6))
+```
+
+The **marginal** cost is the per-image latency reported in the paper; the
+**fixed** cost is host driver and DMA descriptor setup and is the same for both
+designs. Sustained throughput comes from 140 images issued back to back in
+chunks of seven.
 
 ---
 

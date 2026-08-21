@@ -1,0 +1,2 @@
+# Line-Buffer-Layer-Fusion-for-FPGA-CNN-Acceleration
+The proposed design fuses each convolution layer with its following max-pooling layer. Convolution outputs are reordered to produce the four values required by each pooling window, which are reduced immediately without forming the intermediate feature map. Since only the computation order changes, all results remain bit-identical to the reference.

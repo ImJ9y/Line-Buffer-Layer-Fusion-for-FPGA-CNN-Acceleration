@@ -1,5 +1,12 @@
 # Line-Buffer Layer Fusion for FPGA CNN Acceleration
 
+## Quick Links
+
+- **Source Code DOI:** https://doi.org/10.5281/zenodo.22065607
+- **GitHub Repository:** https://github.com/ImJ9y/Line-Buffer-Layer-Fusion-for-FPGA-CNN-Acceleration
+- **Paper:** [Link when available]
+
+
 HLS source and measurement data for a LeNet-5 traffic-sign accelerator on the
 Xilinx PYNQ-Z2 (xc7z020-clg400-1), comparing three buffering architectures.
 
@@ -286,7 +293,7 @@ All three designs guard the tail so only the 120 real outputs are written.
 
 ## Citing
 
-If you use this work, please cite the paper. A DOI will be added on publication.
+If you use this work, please cite the paper:
 
 ```bibtex
 @inproceedings{im2026linebuffer,
@@ -300,7 +307,9 @@ If you use this work, please cite the paper. A DOI will be added on publication.
 }
 ```
 
-To cite the code itself, use the archived release DOI (see `CITATION.cff`).
+To cite the source code, use:
+
+J. Im and R. S. Grover, "Line-Buffer Layer Fusion for FPGA CNN Acceleration (Source Code)," v1.0.0, Zenodo, Aug. 2026. https://doi.org/10.5281/zenodo.22065607
 
 ---
 

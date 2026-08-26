@@ -300,10 +300,9 @@ If you use this work, please cite the paper:
   author    = {Im, Jeonghun and Grover, Radhika S.},
   title     = {An {FPGA}-Based {CNN} Accelerator Architecture Using
                Line-Buffer Layer Fusion for {ADAS} Applications},
-  booktitle = {IEEE International Symposium on Embedded Multicore/Many-core
-               Systems-on-Chip (MCSoC)},
+  booktitle = {arnix.com},
   year      = {2026},
-  note      = {Submitted}
+  note      = {Submitted - IEEE}
 }
 ```
 

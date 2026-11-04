@@ -20,8 +20,7 @@ computed value is bit-identical to the unfused reference.
 
 ## Results
 
-All figures from Vitis HLS 2025.2 and Vivado 2025.2, `ap_fixed<16,8>` weights,
-50 MHz implementation clock.
+All figures from Vitis HLS 2025.2 and Vivado 2025.2, ap_fixed<16,8> weights except where noted, 50 MHz implementation clock.
 
 ### Effect of fusion (buffering scheme held constant)
 
@@ -103,7 +102,9 @@ src/
   lenet.h                     network dimensions and data types
   parameters.h                trained weights, 32-bit float
   parameters_fixed.h          trained weights, ap_fixed<16,8>
-  image_data.h                one 32x32 test image
+  image_data.h                active test image (copy one from image_data.h files/)
+image_data.h files/
+  00000_image_data.h .. 00042_image_data.h   one image per GTSRB class
 testbench/
   tb_lenet.cpp                C simulation testbench
 scripts/
@@ -112,6 +113,38 @@ scripts/
 
 Each `.cpp` is a complete, self-contained top level. Only one is added to a
 project at a time.
+
+---
+
+## Precision comparison
+
+The same source builds in either precision. `lenet.h` selects the datapath type
+and the design file selects the matching weight header:
+
+| | `data_t` | weight header |
+|---|---|---|
+| Fixed point (shipped) | `ap_fixed<16,8>` | `parameters_fixed.h` |
+| Floating point | `float` | `parameters.h` |
+
+Swapping the weight header alone changes nothing, because the kernel casts
+`(data_t)` at read time and re-quantizes the float weights to the values already
+stored in `parameters_fixed.h`. Both the typedef and the header must change.
+
+`image_data.h files/` holds one 32x32 test image per GTSRB class,
+`00000_image_data.h` through `00042_image_data.h`, each normalized to [-1, 1]
+via `(x - 127.5) / 127.5` and carrying its class in the first comment line.
+To test one, point the testbench at it:
+
+    #include "00021_image_data.h"
+    #define GOLDEN_CLASS 21
+
+C simulation over all 43 produces the same predicted class in both precisions.
+Fixed-point scores run uniformly lower, because AP_TRN truncates toward negative
+infinity at every accumulation, but the ordering of the 43 output scores is
+preserved, so the classification is unchanged.
+
+Note that a float build is C-simulation only. It needs 95,407 LUT against the
+device's 53,200 and does not synthesize.
 
 ---
 
@@ -132,11 +165,11 @@ package.output.format=ip_catalog
 syn.file=FINAL_fused.cpp
 syn.file=lenet.h
 syn.file=parameters_fixed.h
-tb.file=tb_lenet.cpp
+tb.file=tb_lenet.cpp    # exactly one testbench; a second main() fails the link
 syn.top=lenet_predict
 ```
 
-Clock constraint 10 ns with 7.3 ns uncertainty.
+Clock constraint 10 ns; Vitis reports an estimated 7.213 ns at the default 2.70 ns uncertainty.
 
 > **Windows path length.** Vivado rejects paths over 260 characters, and the
 > generated ROM filenames are long. If IP export fails with `[Common 17-680]`,

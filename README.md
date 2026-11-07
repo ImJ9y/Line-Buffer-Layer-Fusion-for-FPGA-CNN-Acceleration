@@ -90,8 +90,6 @@ transfer cost of roughly 400 µs exceeds the computation time of either
 accelerator. The AXI DMA's default 14-bit buffer-length register caps a single
 transfer at 16,383 bytes, or seven images.
 
----
-
 ### Classification accuracy
 
 Measured in Vitis C simulation over the full GTSRB test split, 12,630 images
@@ -114,8 +112,8 @@ To reproduce:
     py make_testset.py          # downloads GTSRB, writes gtsrb_test.bin
 
 then set `tb.file=tb_accuracy.cpp`, point `TEST_FILE` at that path, pick the
-precision as in the table below, and run C Simulation. The fixed-point pass
-takes about 25 minutes; float takes about 25 seconds.
+precision as in **Precision comparison** below, and run C Simulation. The
+fixed-point pass takes about 25 minutes; float takes about 25 seconds.
 
 Dataset mirror used: https://www.kaggle.com/datasets/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign
 
@@ -135,9 +133,11 @@ src/
 image_data.h files/
   00000_image_data.h .. 00042_image_data.h   one image per GTSRB class
 testbench/
-  tb_lenet.cpp                C simulation testbench
+  tb_lenet.cpp                single-image C simulation testbench
+  tb_accuracy.cpp             full test-set accuracy, reads gtsrb_test.bin
 scripts/
   lenet_board_test_final.py   board verification and timing measurement
+  make_testset.py             builds gtsrb_test.bin from the GTSRB test split
 ```
 
 Each `.cpp` is a complete, self-contained top level. Only one is added to a
@@ -167,10 +167,10 @@ To test one, point the testbench at it:
     #include "00021_image_data.h"
     #define GOLDEN_CLASS 21
 
-C simulation over all 43 produces the same predicted class in both precisions.
 Fixed-point scores run uniformly lower, because AP_TRN truncates toward negative
-infinity at every accumulation, but the ordering of the 43 output scores is
-preserved, so the classification is unchanged.
+infinity at every accumulation. The bias is close to uniform across output
+classes, so the ranking usually survives; see the accuracy section above for the
+measured effect on the full test set.
 
 Note that a float build is C-simulation only. It needs 95,407 LUT against the
 device's 53,200 and does not synthesize.
@@ -363,7 +363,7 @@ If you use this work, please cite the paper:
   title     = {An {FPGA}-Based {CNN} Accelerator Architecture Using
                Line-Buffer Layer Fusion for {ADAS} Applications},
   year      = {2026},
-  note      = {IEEE - Processing}
+  note      = {IEEE - Accepted}
 }
 ```
 

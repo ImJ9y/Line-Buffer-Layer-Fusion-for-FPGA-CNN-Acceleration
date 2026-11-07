@@ -92,6 +92,35 @@ transfer at 16,383 bytes, or seven images.
 
 ---
 
+### Classification accuracy
+
+Measured in Vitis C simulation over the full GTSRB test split, 12,630 images
+with labels from the dataset's own `Test.csv`. Only the datapath type in
+`lenet.h` and the matching weight header differ between the two rows.
+
+| Precision | Correct | Accuracy |
+|---|---:|---:|
+| 32-bit float | 11,347 / 12,630 | 89.84% |
+| `ap_fixed<16,8>` | 11,115 / 12,630 | 88.00% |
+| | | **1.84 pp** |
+
+621 images (4.92%) change prediction between the two. The loss concentrates in
+low-confidence samples: across those 621, the median floating-point margin
+between the top two classes is 0.905, against 8.787 over the whole test set.
+Quantization only flips decisions the float model was already making narrowly.
+
+To reproduce:
+
+    py make_testset.py          # downloads GTSRB, writes gtsrb_test.bin
+
+then set `tb.file=tb_accuracy.cpp`, point `TEST_FILE` at that path, pick the
+precision as in the table below, and run C Simulation. The fixed-point pass
+takes about 25 minutes; float takes about 25 seconds.
+
+Dataset mirror used: https://www.kaggle.com/datasets/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign
+
+---
+
 ## Repository layout
 
 ```

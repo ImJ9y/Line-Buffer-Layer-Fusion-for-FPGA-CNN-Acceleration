@@ -1,4 +1,4 @@
-<img width="1898" height="838" alt="image" src="https://github.com/user-attachments/assets/a8e29084-aa9a-43af-90d8-6246e0d5aac7" /># Line-Buffer Layer Fusion for FPGA CNN Acceleration
+### Line-Buffer Layer Fusion for FPGA CNN Acceleration
 
 ## Quick Links
 

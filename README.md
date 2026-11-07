@@ -109,7 +109,7 @@ Quantization only flips decisions the float model was already making narrowly.
 
 To reproduce:
 
-    py make_testset.py          # downloads GTSRB, writes gtsrb_test.bin
+    py measure_accuracy.py      # downloads GTSRB, writes gtsrb_subset.bin
 
 then set `tb.file=tb_accuracy.cpp`, point `TEST_FILE` at that path, pick the
 precision as in **Precision comparison** below, and run C Simulation. The
@@ -136,8 +136,8 @@ testbench/
   tb_lenet.cpp                single-image C simulation testbench
   tb_accuracy.cpp             full test-set accuracy, reads gtsrb_test.bin
 scripts/
-  lenet_board_test_final.py   board verification and timing measurement
-  make_testset.py             builds gtsrb_test.bin from the GTSRB test split
+  measure_accuracy.py         builds gtsrb_subset.bin from the GTSRB test split
+  lenet_ref.py                network reference used by measure_accuracy.py
 ```
 
 Each `.cpp` is a complete, self-contained top level. Only one is added to a

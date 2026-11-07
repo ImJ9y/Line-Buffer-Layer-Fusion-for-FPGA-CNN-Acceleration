@@ -1,4 +1,4 @@
-# Line-Buffer Layer Fusion for FPGA CNN Acceleration
+<img width="1898" height="838" alt="image" src="https://github.com/user-attachments/assets/a8e29084-aa9a-43af-90d8-6246e0d5aac7" /># Line-Buffer Layer Fusion for FPGA CNN Acceleration
 
 ## Quick Links
 
@@ -136,6 +136,7 @@ testbench/
   tb_lenet.cpp                single-image C simulation testbench
   tb_accuracy.cpp             full test-set accuracy, reads gtsrb_test.bin
 scripts/
+  lenet_board_test_final.py   board verification and timing measurement
   measure_accuracy.py         builds gtsrb_subset.bin from the GTSRB test split
   lenet_ref.py                network reference used by measure_accuracy.py
 ```
